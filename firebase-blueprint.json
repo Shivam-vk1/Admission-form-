@@ -1,0 +1,302 @@
+{
+  "entities": {
+    "Application": {
+      "title": "Application",
+      "description": "Full High School and Preparatory Academy student admission application record containing academic history, guardian contact details, personal statement, and committee review state.",
+      "type": "object",
+      "properties": {
+        "referenceId": {
+          "type": "string",
+          "description": "Unique application reference identifier matching document ID (e.g. CPA-2026-8492).",
+          "minLength": 5,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentFirstName": {
+          "type": "string",
+          "description": "Legal first name of the applicant.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "studentLastName": {
+          "type": "string",
+          "description": "Legal last name of the applicant.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "dateOfBirth": {
+          "type": "string",
+          "description": "Applicant date of birth in YYYY-MM-DD format.",
+          "minLength": 8,
+          "maxLength": 16
+        },
+        "gender": {
+          "type": "string",
+          "description": "Applicant gender selection.",
+          "enum": ["Female", "Male", "Non-Binary", "Prefer Not to Say"],
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "applyingGrade": {
+          "type": "string",
+          "description": "Target high school grade level.",
+          "enum": ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "enrollmentType": {
+          "type": "string",
+          "description": "Day or Boarding enrollment preference.",
+          "enum": ["Day Student", "Boarding Student"],
+          "minLength": 5,
+          "maxLength": 30
+        },
+        "academicTrack": {
+          "type": "string",
+          "description": "Selected preparatory academic honors track.",
+          "enum": [
+            "STEM & Research Honors",
+            "Classical Humanities & Law",
+            "Visual & Performing Arts",
+            "Global Economics & Leadership"
+          ],
+          "minLength": 5,
+          "maxLength": 60
+        },
+        "previousSchool": {
+          "type": "string",
+          "description": "Current or most recently attended school.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "gpa": {
+          "type": "string",
+          "description": "Cumulative unweighted GPA on a 4.00 scale.",
+          "minLength": 1,
+          "maxLength": 10
+        },
+        "extracurriculars": {
+          "type": "string",
+          "description": "Summary of honors, athletics, arts, and leadership activities.",
+          "minLength": 0,
+          "maxLength": 600
+        },
+        "guardianName": {
+          "type": "string",
+          "description": "Primary parent or legal guardian full name.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "guardianRelationship": {
+          "type": "string",
+          "description": "Guardian relationship to the applicant.",
+          "minLength": 2,
+          "maxLength": 50
+        },
+        "guardianEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Primary contact email address for admissions correspondence.",
+          "minLength": 5,
+          "maxLength": 120
+        },
+        "guardianPhone": {
+          "type": "string",
+          "description": "Primary contact telephone number.",
+          "minLength": 7,
+          "maxLength": 30
+        },
+        "residentialAddress": {
+          "type": "string",
+          "description": "Current family residential street address, city, state, and postal code.",
+          "minLength": 5,
+          "maxLength": 250
+        },
+        "personalStatement": {
+          "type": "string",
+          "description": "Applicant personal essay response.",
+          "minLength": 20,
+          "maxLength": 2000
+        },
+        "status": {
+          "type": "string",
+          "description": "Admissions committee decision state.",
+          "enum": ["pending", "approved", "waitlisted", "rejected"],
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "adminNotes": {
+          "type": "string",
+          "description": "Internal or committee decision remarks entered by the administrator.",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "reviewedBy": {
+          "type": "string",
+          "description": "Email of the administrator who last updated the decision status.",
+          "minLength": 0,
+          "maxLength": 120
+        },
+        "applicantUid": {
+          "type": "string",
+          "description": "UID of the authenticated submitter or 'public' for unauthenticated submissions.",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the application was submitted."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the application was last modified."
+        }
+      },
+      "required": [
+        "referenceId",
+        "studentFirstName",
+        "studentLastName",
+        "dateOfBirth",
+        "gender",
+        "applyingGrade",
+        "enrollmentType",
+        "academicTrack",
+        "previousSchool",
+        "gpa",
+        "extracurriculars",
+        "guardianName",
+        "guardianRelationship",
+        "guardianEmail",
+        "guardianPhone",
+        "residentialAddress",
+        "personalStatement",
+        "status",
+        "adminNotes",
+        "reviewedBy",
+        "applicantUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ApplicationStatusPublic": {
+      "title": "ApplicationStatusPublic",
+      "description": "PII-free public status lookup projection allowing applicants to check their admission status by Reference ID without exposing personal or guardian contact data.",
+      "type": "object",
+      "properties": {
+        "referenceId": {
+          "type": "string",
+          "description": "Application Reference ID matching document ID.",
+          "minLength": 5,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentInitials": {
+          "type": "string",
+          "description": "Redacted student initials and first name (e.g. 'Alex M.').",
+          "minLength": 1,
+          "maxLength": 90
+        },
+        "applyingGrade": {
+          "type": "string",
+          "enum": ["Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "enrollmentType": {
+          "type": "string",
+          "enum": ["Day Student", "Boarding Student"],
+          "minLength": 5,
+          "maxLength": 30
+        },
+        "academicTrack": {
+          "type": "string",
+          "enum": [
+            "STEM & Research Honors",
+            "Classical Humanities & Law",
+            "Visual & Performing Arts",
+            "Global Economics & Leadership"
+          ],
+          "minLength": 5,
+          "maxLength": 60
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "waitlisted", "rejected"],
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "decisionSummary": {
+          "type": "string",
+          "description": "Committee note shared on the status lookup card.",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "applicantUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "referenceId",
+        "studentInitials",
+        "applyingGrade",
+        "enrollmentType",
+        "academicTrack",
+        "status",
+        "decisionSummary",
+        "applicantUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator membership document.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/applications/{applicationId}": {
+      "schema": { "$ref": "#/entities/Application" },
+      "description": "Full admission dossiers containing PII. Creation is open to valid submissions; reading, listing, and decision updates are strictly restricted to the verified Gmail administrator (shivamvk1090@gmail.com) or the authenticated owner."
+    },
+    "/application_status/{applicationId}": {
+      "schema": { "$ref": "#/entities/ApplicationStatusPublic" },
+      "description": "PII-isolated status projection synced atomically with /applications/{applicationId} for Reference ID lookup."
+    },
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted administrator registry keyed by Firebase Auth UID."
+    }
+  }
+}

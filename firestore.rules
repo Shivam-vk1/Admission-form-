@@ -1,0 +1,291 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Hardened Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 5 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Cost-safe admin check without DB lookups (used in list queries)
+    function isBootstrappedAdmin() {
+      return isVerified()
+        && request.auth.token.email is string
+        && request.auth.token.email.size() >= 5
+        && request.auth.token.email.size() <= 120
+        && request.auth.token.email == 'shivamvk1090@gmail.com';
+    }
+
+    // Full admin check for single-document operations
+    function isAdmin() {
+      return isBootstrappedAdmin()
+        || (isVerified() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // Validation Blueprint: Application
+    function isValidApplication(data) {
+      return data.keys().hasAll([
+        'referenceId',
+        'studentFirstName',
+        'studentLastName',
+        'dateOfBirth',
+        'gender',
+        'applyingGrade',
+        'enrollmentType',
+        'academicTrack',
+        'previousSchool',
+        'gpa',
+        'extracurriculars',
+        'guardianName',
+        'guardianRelationship',
+        'guardianEmail',
+        'guardianPhone',
+        'residentialAddress',
+        'personalStatement',
+        'status',
+        'adminNotes',
+        'reviewedBy',
+        'applicantUid',
+        'createdAt',
+        'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'referenceId',
+        'studentFirstName',
+        'studentLastName',
+        'dateOfBirth',
+        'gender',
+        'applyingGrade',
+        'enrollmentType',
+        'academicTrack',
+        'previousSchool',
+        'gpa',
+        'extracurriculars',
+        'guardianName',
+        'guardianRelationship',
+        'guardianEmail',
+        'guardianPhone',
+        'residentialAddress',
+        'personalStatement',
+        'status',
+        'adminNotes',
+        'reviewedBy',
+        'applicantUid',
+        'createdAt',
+        'updatedAt'
+      ])
+      && data.referenceId is string && data.referenceId.size() >= 5 && data.referenceId.size() <= 32 && data.referenceId.matches('^[a-zA-Z0-9_\\-]+$')
+      && data.studentFirstName is string && data.studentFirstName.size() >= 1 && data.studentFirstName.size() <= 80
+      && data.studentLastName is string && data.studentLastName.size() >= 1 && data.studentLastName.size() <= 80
+      && data.dateOfBirth is string && data.dateOfBirth.size() >= 8 && data.dateOfBirth.size() <= 16
+      && data.gender is string && data.gender.size() >= 1 && data.gender.size() <= 30
+      && (data.gender == 'Female' || data.gender == 'Male' || data.gender == 'Non-Binary' || data.gender == 'Prefer Not to Say')
+      && data.applyingGrade is string && data.applyingGrade.size() >= 5 && data.applyingGrade.size() <= 20
+      && (data.applyingGrade == 'Grade 9' || data.applyingGrade == 'Grade 10' || data.applyingGrade == 'Grade 11' || data.applyingGrade == 'Grade 12')
+      && data.enrollmentType is string && data.enrollmentType.size() >= 5 && data.enrollmentType.size() <= 30
+      && (data.enrollmentType == 'Day Student' || data.enrollmentType == 'Boarding Student')
+      && data.academicTrack is string && data.academicTrack.size() >= 5 && data.academicTrack.size() <= 60
+      && (
+        data.academicTrack == 'STEM & Research Honors'
+        || data.academicTrack == 'Classical Humanities & Law'
+        || data.academicTrack == 'Visual & Performing Arts'
+        || data.academicTrack == 'Global Economics & Leadership'
+      )
+      && data.previousSchool is string && data.previousSchool.size() >= 2 && data.previousSchool.size() <= 120
+      && data.gpa is string && data.gpa.size() >= 1 && data.gpa.size() <= 10
+      && data.extracurriculars is string && data.extracurriculars.size() >= 0 && data.extracurriculars.size() <= 600
+      && data.guardianName is string && data.guardianName.size() >= 2 && data.guardianName.size() <= 100
+      && data.guardianRelationship is string && data.guardianRelationship.size() >= 2 && data.guardianRelationship.size() <= 50
+      && data.guardianEmail is string && data.guardianEmail.size() >= 5 && data.guardianEmail.size() <= 120
+      && data.guardianPhone is string && data.guardianPhone.size() >= 7 && data.guardianPhone.size() <= 30
+      && data.residentialAddress is string && data.residentialAddress.size() >= 5 && data.residentialAddress.size() <= 250
+      && data.personalStatement is string && data.personalStatement.size() >= 20 && data.personalStatement.size() <= 2000
+      && data.status is string && data.status.size() >= 5 && data.status.size() <= 20
+      && (data.status == 'pending' || data.status == 'approved' || data.status == 'waitlisted' || data.status == 'rejected')
+      && data.adminNotes is string && data.adminNotes.size() >= 0 && data.adminNotes.size() <= 1000
+      && data.reviewedBy is string && data.reviewedBy.size() >= 0 && data.reviewedBy.size() <= 120
+      && data.applicantUid is string && data.applicantUid.size() >= 1 && data.applicantUid.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: ApplicationStatusPublic
+    function isValidApplicationStatus(data) {
+      return data.keys().hasAll([
+        'referenceId',
+        'studentInitials',
+        'applyingGrade',
+        'enrollmentType',
+        'academicTrack',
+        'status',
+        'decisionSummary',
+        'applicantUid',
+        'createdAt',
+        'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'referenceId',
+        'studentInitials',
+        'applyingGrade',
+        'enrollmentType',
+        'academicTrack',
+        'status',
+        'decisionSummary',
+        'applicantUid',
+        'createdAt',
+        'updatedAt'
+      ])
+      && data.referenceId is string && data.referenceId.size() >= 5 && data.referenceId.size() <= 32 && data.referenceId.matches('^[a-zA-Z0-9_\\-]+$')
+      && data.studentInitials is string && data.studentInitials.size() >= 1 && data.studentInitials.size() <= 90
+      && data.applyingGrade is string && data.applyingGrade.size() >= 5 && data.applyingGrade.size() <= 20
+      && (data.applyingGrade == 'Grade 9' || data.applyingGrade == 'Grade 10' || data.applyingGrade == 'Grade 11' || data.applyingGrade == 'Grade 12')
+      && data.enrollmentType is string && data.enrollmentType.size() >= 5 && data.enrollmentType.size() <= 30
+      && (data.enrollmentType == 'Day Student' || data.enrollmentType == 'Boarding Student')
+      && data.academicTrack is string && data.academicTrack.size() >= 5 && data.academicTrack.size() <= 60
+      && (
+        data.academicTrack == 'STEM & Research Honors'
+        || data.academicTrack == 'Classical Humanities & Law'
+        || data.academicTrack == 'Visual & Performing Arts'
+        || data.academicTrack == 'Global Economics & Leadership'
+      )
+      && data.status is string && data.status.size() >= 5 && data.status.size() <= 20
+      && (data.status == 'pending' || data.status == 'approved' || data.status == 'waitlisted' || data.status == 'rejected')
+      && data.decisionSummary is string && data.decisionSummary.size() >= 0 && data.decisionSummary.size() <= 1000
+      && data.applicantUid is string && data.applicantUid.size() >= 1 && data.applicantUid.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    // Validation Blueprint: AdminRecord
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['email', 'role', 'createdAt'])
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 120
+        && data.role is string && data.role.size() == 5 && data.role == 'admin'
+        && data.createdAt is timestamp;
+    }
+
+    // Collection 1: Full Admission Dossiers (Contains PII)
+    match /applications/{applicationId} {
+      allow get: if isValidId(applicationId)
+        && (isAdmin() || (isVerified() && existing().applicantUid == request.auth.uid));
+
+      // Query Enforcer & Cost-Optimization: No get()/exists() inside list
+      allow list: if isBootstrappedAdmin()
+        || (isVerified() && existing().applicantUid == request.auth.uid);
+
+      allow create: if isValidId(applicationId)
+        && isValidApplication(incoming())
+        && incoming().referenceId == applicationId
+        && incoming().status == 'pending'
+        && incoming().adminNotes == ''
+        && incoming().reviewedBy == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (request.auth == null && incoming().applicantUid == 'public')
+          || (isVerified() && incoming().applicantUid == request.auth.uid)
+        )
+        && existsAfter(/databases/$(database)/documents/application_status/$(applicationId));
+
+      allow update: if isSignedIn()
+        && isValidId(applicationId)
+        && isValidApplication(incoming())
+        && incoming().referenceId == existing().referenceId
+        && incoming().applicantUid == existing().applicantUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().studentFirstName == existing().studentFirstName
+        && incoming().studentLastName == existing().studentLastName
+        && incoming().dateOfBirth == existing().dateOfBirth
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && (
+          // Action 1: Committee Status & Notes Decision Update
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'adminNotes', 'reviewedBy', 'updatedAt'])
+          // Action 2: Full Admin Record Correction Override
+          || isBootstrappedAdmin()
+        )
+        && existsAfter(/databases/$(database)/documents/application_status/$(applicationId));
+
+      allow delete: if isSignedIn() && isValidId(applicationId) && isAdmin();
+    }
+
+    // Collection 2: PII-Isolated Public Status Projection
+    match /application_status/{applicationId} {
+      // Single-document lookup by Reference ID (no PII exposed)
+      allow get: if isValidId(applicationId);
+
+      // Prevent scraping all status documents
+      allow list: if isBootstrappedAdmin()
+        || (isVerified() && existing().applicantUid == request.auth.uid);
+
+      allow create: if isValidId(applicationId)
+        && isValidApplicationStatus(incoming())
+        && incoming().referenceId == applicationId
+        && incoming().status == 'pending'
+        && incoming().decisionSummary == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          (request.auth == null && incoming().applicantUid == 'public')
+          || (isVerified() && incoming().applicantUid == request.auth.uid)
+        )
+        && existsAfter(/databases/$(database)/documents/applications/$(applicationId));
+
+      allow update: if isSignedIn()
+        && isValidId(applicationId)
+        && isValidApplicationStatus(incoming())
+        && incoming().referenceId == existing().referenceId
+        && incoming().applicantUid == existing().applicantUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isAdmin()
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'decisionSummary', 'updatedAt'])
+          || isBootstrappedAdmin()
+        )
+        && existsAfter(/databases/$(database)/documents/applications/$(applicationId));
+
+      allow delete: if isSignedIn() && isValidId(applicationId) && isAdmin();
+    }
+
+    // Collection 3: Trusted Admins Registry
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && isValidId(adminUid) && (request.auth.uid == adminUid || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isSignedIn()
+        && isValidId(adminUid)
+        && isValidAdminRecord(incoming())
+        && incoming().createdAt == request.time
+        && isBootstrappedAdmin();
+      allow update: if isSignedIn()
+        && isValidId(adminUid)
+        && isValidAdminRecord(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'role'])
+        && isBootstrappedAdmin();
+      allow delete: if isSignedIn() && isValidId(adminUid) && isBootstrappedAdmin();
+    }
+  }
+}
